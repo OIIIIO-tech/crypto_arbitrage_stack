@@ -14,6 +14,7 @@ from app.database.database import get_session
 from app.models.market_data import MarketData, Base
 from app.config import EXCHANGES, TRADING_PAIRS
 from app.database.database import engine
+from app.config_env import get_api_credentials, has_api_credentials
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -30,22 +31,17 @@ def fetch_market_data():
         new_market_data_points = []
         for exchange_name in EXCHANGES:
             try:
-                # For public endpoints like OHLCV, we don't need API keys
-                # Only add credentials if they are available
-                api_key_var = f"{exchange_name.upper()}_API_KEY"
-                api_secret_var = f"{exchange_name.upper()}_API_SECRET"
-
+                # Initialize exchange configuration
                 exchange_config = {
                     'sandbox': False,  # Use production endpoints
                     'enableRateLimit': True,  # Enable rate limiting
                 }
                 
-                # Only add API credentials if they exist
-                api_key = os.getenv(api_key_var)
-                api_secret = os.getenv(api_secret_var)
-                if api_key and api_secret:
-                    exchange_config['apiKey'] = api_key
-                    exchange_config['secret'] = api_secret
+                # Add API credentials if available
+                credentials = get_api_credentials(exchange_name)
+                if credentials:
+                    exchange_config['apiKey'] = credentials['api_key']
+                    exchange_config['secret'] = credentials['api_secret']
                     logging.info(f"Using API credentials for {exchange_name}")
                 else:
                     logging.info(f"No API credentials found for {exchange_name}, using public endpoints only")

@@ -1,6 +1,7 @@
 import ccxt
 import logging
 from app.config import EXCHANGES, TRADING_PAIRS
+from app.config_env import get_api_credentials
 
 # Configure logging if not already configured by a higher-level script
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,7 +23,19 @@ def scan_for_arbitrage():
         tickers = {}
         for exchange_name in EXCHANGES:
             try:
-                exchange = getattr(ccxt, exchange_name)({'enableRateLimit': True})
+                # Initialize exchange configuration
+                exchange_config = {
+                    'sandbox': False,
+                    'enableRateLimit': True
+                }
+                
+                # Add API credentials if available (for potentially better rate limits)
+                credentials = get_api_credentials(exchange_name)
+                if credentials:
+                    exchange_config['apiKey'] = credentials['api_key']
+                    exchange_config['secret'] = credentials['api_secret']
+                
+                exchange = getattr(ccxt, exchange_name)(exchange_config)
                 if not exchange.has['fetchTicker']:
                     logging.warning(f"  {exchange_name} does not support fetchTicker. Skipping.")
                     continue
