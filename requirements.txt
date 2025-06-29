@@ -1,0 +1,4 @@
+ccxt
+backtrader
+pandas
+SQLAlchemy
