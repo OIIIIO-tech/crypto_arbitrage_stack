@@ -2,3 +2,4 @@ ccxt
 backtrader
 pandas
 SQLAlchemy
+schedule

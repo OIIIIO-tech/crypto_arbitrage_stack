@@ -9,6 +9,7 @@ A comprehensive cryptocurrency arbitrage detection and backtesting system built 
 - **Backtesting**: Historical strategy testing with Backtrader integration
 - **Database Storage**: SQLite database for market data persistence
 - **Plotting**: Matplotlib integration for visualizing backtest results
+- **Automated Scheduling**: Continuous monitoring with configurable intervals
 
 ## Installation
 
@@ -54,6 +55,18 @@ python main.py backtest --plot
 python main.py view
 ```
 
+### Automated Scheduling
+Run continuous monitoring with automated scheduling:
+```bash
+python scheduler.py
+```
+
+The scheduler runs:
+- **Market data fetching**: Every 1 minute
+- **Arbitrage scanning**: Every 15 seconds
+
+Press `Ctrl+C` to stop the scheduler.
+
 ## Project Structure
 
 ```
@@ -67,6 +80,7 @@ crypto_arbitrage_stack/
 │   └── utils/             # Utility functions
 ├── tests/                 # Unit tests
 ├── main.py               # Main application entry point
+├── scheduler.py          # Automated scheduling for continuous monitoring
 └── requirements.txt      # Python dependencies
 ```
 
@@ -77,6 +91,7 @@ crypto_arbitrage_stack/
 - **pandas**: Data manipulation
 - **SQLAlchemy**: Database ORM
 - **matplotlib**: Plotting and visualization
+- **schedule**: Task scheduling for automated monitoring
 
 ## Configuration
 
@@ -87,6 +102,7 @@ The application supports the following trading pairs:
 Supported exchanges:
 - Binance
 - Bybit
+- Bitstamp
 
 ## Features in Detail
 
