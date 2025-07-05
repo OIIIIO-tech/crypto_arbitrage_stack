@@ -37,9 +37,8 @@ def fetch_market_data():
                     'enableRateLimit': True,  # Enable rate limiting
                 }
                 
-                # Set market type for futures exchanges
-                if exchange_name in ['binance', 'bybit']:
-                    exchange_config['options'] = {'defaultType': 'future'}  # Use futures market
+                # Set market type for futures exchanges  
+                # Note: We'll handle SHIB as spot during the symbol loop
                 
                 # Add API credentials if available
                 credentials = get_api_credentials(exchange_name)
@@ -62,6 +61,12 @@ def fetch_market_data():
             symbols_to_fetch = EXCHANGE_TRADING_PAIRS.get(exchange_name, TRADING_PAIRS)
             for symbol in symbols_to_fetch:
                 try:
+                    # Set market type for Bybit based on symbol
+                    if exchange_name == 'bybit':
+                        if symbol == 'SHIB/USDT':
+                            exchange.options['defaultType'] = 'spot'  # SHIB is spot
+                        else:
+                            exchange.options['defaultType'] = 'future'  # Others are futures
                     # Find the timestamp of the last entry to fetch only new data
                     latest_record = session.query(MarketData.timestamp).filter_by(
                         exchange=exchange_name, symbol=symbol

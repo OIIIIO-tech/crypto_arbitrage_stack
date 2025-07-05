@@ -38,7 +38,14 @@ python main.py feed
 
 ### Scan for Arbitrage Opportunities
 ```bash
+# Single scan
 python main.py scan
+
+# Continuous scanning (runs until stopped with Ctrl+C)
+python main.py scan-continuous
+
+# Continuous scanning with custom interval (default: 15 seconds)
+python main.py scan-continuous --interval 30
 ```
 
 ### Run Backtests
@@ -95,16 +102,48 @@ crypto_arbitrage_stack/
 
 ## Configuration
 
-The application supports the following trading pairs:
-- BTC/USDT
-- ETH/USDT
+The application supports the following cryptocurrencies:
+- BTC (Bitcoin)
+- ETH (Ethereum)
+- SOL (Solana)
+- XRP (Ripple)
+- ADA (Cardano)
+- DOT (Polkadot)
+- UNI (Uniswap)
+- AAVE (Aave)
+- LINK (Chainlink)
+- XLM (Stellar)
+- SHIB (Shiba Inu)
 
 Supported exchanges:
-- Binance
-- Bybit
-- Bitstamp
+- Bybit (perpetual futures)
+- Bitstamp (spot pairs)
 
 Trading fees for each exchange can be configured in `app/config.py`. The scanner uses these fees to calculate net profit.
+
+## Output Files
+
+The scanner generates two types of output files:
+
+### 1. Arbitrage Opportunities (`arbitrage_opportunities.jsonl`)
+JSON Lines format file containing all profitable opportunities found:
+```json
+{
+  "timestamp": "2025-07-05T11:19:29.123456",
+  "base_currency": "BTC",
+  "buy_exchange": "bitstamp",
+  "sell_exchange": "binance",
+  "net_profit_usd": 3.95,
+  "net_profit_percent": 0.395
+}
+```
+
+### 2. Scanner Output Log (`scanner_output.log`)
+Complete log of all scanner activity in continuous mode, including:
+- Scan results and timestamps
+- Opportunity details
+- Market spreads and prices
+- Session start/stop times
 
 ## Features in Detail
 
@@ -115,8 +154,12 @@ Trading fees for each exchange can be configured in `app/config.py`. The scanner
 
 ### Arbitrage Scanner
 - Real-time price comparison across exchanges
-- Calculates potential profit percentages
-- Identifies buy/sell opportunities
+- Single scan and continuous monitoring modes
+- Comprehensive net profit simulation with actual dollar amounts
+- Automatic saving of profitable opportunities to `arbitrage_opportunities.jsonl`
+- Complete output logging to `scanner_output.log` in continuous mode
+- Cross-market arbitrage detection (futures vs spot)
+- Identifies buy/sell opportunities with detailed trade breakdowns
 
 ### Backtesting
 - Uses Backtrader framework

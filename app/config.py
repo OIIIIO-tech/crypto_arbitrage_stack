@@ -8,20 +8,33 @@ DATABASE_PATH = f"sqlite:///{os.path.join(project_root, 'market_data.db')}"
 # --- Trading Configuration ---
 # List of exchanges to use for data fetching, scanning, and backtesting.
 # Ensure that ccxt supports these exchanges.
-EXCHANGES = ['binance', 'bybit', 'bitstamp']
+EXCHANGES = ['bybit', 'bitstamp']
 
 # Exchange-specific trading pairs configuration
-# Binance and Bybit use perpetual futures contracts, Bitstamp uses spot pairs
+# Bybit uses perpetual futures contracts, Bitstamp uses spot pairs
 EXCHANGE_TRADING_PAIRS = {
-    'binance': ['BTC/USDT:USDT', 'ETH/USDT:USDT', 'SOL/USDT:USDT', 'XRP/USDT:USDT'],  # Perpetual futures
-    'bybit': ['BTC/USDT:USDT', 'ETH/USDT:USDT', 'SOL/USDT:USDT', 'XRP/USDT:USDT'],    # Perpetual futures
-    'bitstamp': ['BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD']  # Spot pairs
+    'bybit': [
+        'BTC/USDT:USDT', 'ETH/USDT:USDT', 'SOL/USDT:USDT', 'XRP/USDT:USDT',
+        'ADA/USDT:USDT', 'DOT/USDT:USDT', 'UNI/USDT:USDT', 'AAVE/USDT:USDT',
+        'LINK/USDT:USDT', 'XLM/USDT:USDT', 'SHIB/USDT'
+    ],  # Perpetual futures (except SHIB which is spot)
+    'bitstamp': [
+        'BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD',
+        'ADA/USD', 'DOT/USD', 'UNI/USD', 'AAVE/USD',
+        'LINK/USD', 'XLM/USD', 'SHIB/USD'
+    ]  # Spot pairs
 }
 
 # Legacy support - all unique trading pairs for backward compatibility
 TRADING_PAIRS = [
-    'BTC/USDT:USDT', 'ETH/USDT:USDT', 'SOL/USDT:USDT', 'XRP/USDT:USDT',  # Futures
-    'BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD'  # Spot
+    # Futures pairs
+    'BTC/USDT:USDT', 'ETH/USDT:USDT', 'SOL/USDT:USDT', 'XRP/USDT:USDT',
+    'ADA/USDT:USDT', 'DOT/USDT:USDT', 'UNI/USDT:USDT', 'AAVE/USDT:USDT',
+    'LINK/USDT:USDT', 'XLM/USDT:USDT',
+    # Spot pairs
+    'BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD',
+    'ADA/USD', 'DOT/USD', 'UNI/USD', 'AAVE/USD',
+    'LINK/USD', 'XLM/USD', 'SHIB/USD', 'SHIB/USDT'
 ]
 
 # --- Fee Configuration ---
@@ -32,5 +45,5 @@ TRADING_PAIRS = [
 EXCHANGE_FEES = {
     'binance': 0.0004,   # 0.04% (futures taker fee)
     'bybit': 0.0006,     # 0.06% (futures taker fee)
-    'bitstamp': 0.004,   # 0.4% (spot taker fee)
+    'bitstamp': 0.0004,   # 0.04%% (spot taker fee)
 }
