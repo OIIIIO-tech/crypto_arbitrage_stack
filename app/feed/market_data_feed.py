@@ -12,7 +12,7 @@ import datetime
 import logging
 from app.database.database import get_session
 from app.models.market_data import MarketData, Base
-from app.config import EXCHANGES, TRADING_PAIRS
+from app.config import EXCHANGES, TRADING_PAIRS, EXCHANGE_TRADING_PAIRS
 from app.database.database import engine
 from app.config_env import get_api_credentials, has_api_credentials
 
@@ -37,6 +37,10 @@ def fetch_market_data():
                     'enableRateLimit': True,  # Enable rate limiting
                 }
                 
+                # Set market type for futures exchanges
+                if exchange_name in ['binance', 'bybit']:
+                    exchange_config['options'] = {'defaultType': 'future'}  # Use futures market
+                
                 # Add API credentials if available
                 credentials = get_api_credentials(exchange_name)
                 if credentials:
@@ -54,7 +58,9 @@ def fetch_market_data():
                 logging.error(f"Failed to initialize exchange '{exchange_name}': {e}")
                 continue
 
-            for symbol in TRADING_PAIRS:
+            # Use exchange-specific trading pairs if available, fallback to global list
+            symbols_to_fetch = EXCHANGE_TRADING_PAIRS.get(exchange_name, TRADING_PAIRS)
+            for symbol in symbols_to_fetch:
                 try:
                     # Find the timestamp of the last entry to fetch only new data
                     latest_record = session.query(MarketData.timestamp).filter_by(

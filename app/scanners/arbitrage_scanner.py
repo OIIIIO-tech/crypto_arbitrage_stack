@@ -1,7 +1,7 @@
 import asyncio
 import ccxt.async_support as ccxt  # Use the async version of ccxt
 import logging
-from app.config import EXCHANGES, TRADING_PAIRS, EXCHANGE_FEES
+from app.config import EXCHANGES, TRADING_PAIRS, EXCHANGE_FEES, EXCHANGE_TRADING_PAIRS
 from app.config_env import get_api_credentials
 
 # Configure logging if not already configured by a higher-level script
@@ -21,6 +21,10 @@ async def fetch_ticker_for_exchange(exchange_name, symbol):
             'enableRateLimit': True,
             'newUpdates': False  # Recommended for fetch_ticker in async mode
         }
+        
+        # Set market type for futures exchanges
+        if exchange_name in ['binance', 'bybit']:
+            exchange_config['options'] = {'defaultType': 'future'}  # Use futures market
         
         # Add API credentials if available
         credentials = get_api_credentials(exchange_name)
@@ -52,26 +56,43 @@ async def fetch_ticker_for_exchange(exchange_name, symbol):
 
 async def scan_for_arbitrage():
     """
-    Scans for simple arbitrage opportunities by fetching live ticker data concurrently.
+    Scans for arbitrage opportunities by fetching live ticker data concurrently.
+    Groups by base currency to compare across different quote currencies (USDT vs USD).
     """
     logging.info("Starting asynchronous arbitrage scan for live ticker data...")
 
-    for symbol in TRADING_PAIRS:
-        logging.info(f"--- Scanning for {symbol} ---")
-
-        # Create a list of tasks to fetch tickers from all exchanges concurrently
-        tasks = [fetch_ticker_for_exchange(exchange_name, symbol) for exchange_name in EXCHANGES]
+    # Group trading pairs by base currency
+    base_currencies = ['BTC', 'ETH', 'SOL', 'XRP']
+    
+    for base_currency in base_currencies:
+        logging.info(f"--- Scanning for {base_currency} ---")
+        
+        # Create tasks to fetch tickers for this base currency from all exchanges
+        tasks = []
+        for exchange_name in EXCHANGES:
+            if exchange_name in EXCHANGE_TRADING_PAIRS:
+                # Find the appropriate trading pair for this exchange
+                exchange_pairs = EXCHANGE_TRADING_PAIRS[exchange_name]
+                matching_pair = next((pair for pair in exchange_pairs if pair.startswith(f"{base_currency}/")), None)
+                if matching_pair:
+                    tasks.append(fetch_ticker_for_exchange(exchange_name, matching_pair))
         
         # Run all tasks and gather results
         results = await asyncio.gather(*tasks)
 
         # Filter out failed requests and build the tickers dictionary
-        tickers = {exchange: data for exchange, data in results if exchange and data}
-        for exchange_name, data in tickers.items():
-            logging.info(f"  {exchange_name}: Bid: {data['bid']}, Ask: {data['ask']}")
+        tickers = {}
+        for result in results:
+            if result and len(result) == 2:
+                exchange, data = result
+                tickers[exchange] = data
+                # Get the trading pair for logging
+                exchange_pairs = EXCHANGE_TRADING_PAIRS.get(exchange, [])
+                matching_pair = next((pair for pair in exchange_pairs if pair.startswith(f"{base_currency}/")), "Unknown")
+                logging.info(f"  {exchange} ({matching_pair}): Bid: {data['bid']}, Ask: {data['ask']}")
 
         if len(tickers) < 2:
-            logging.warning(f"Need at least two exchanges with valid tickers for {symbol} to find an opportunity. Skipping.")
+            logging.warning(f"Need at least two exchanges with valid tickers for {base_currency} to find an opportunity. Skipping.")
             continue
 
         # Find the best (highest) bid and best (lowest) ask across all exchanges
@@ -92,18 +113,22 @@ async def scan_for_arbitrage():
 
         # The new arbitrage condition: Is there profit after fees?
         if effective_sell_price > effective_buy_price:
+            # Get the trading pairs for display
+            buy_pair = next((pair for pair in EXCHANGE_TRADING_PAIRS.get(best_ask_exchange, []) if pair.startswith(f"{base_currency}/")), "Unknown")
+            sell_pair = next((pair for pair in EXCHANGE_TRADING_PAIRS.get(best_bid_exchange, []) if pair.startswith(f"{base_currency}/")), "Unknown")
+            
             gross_profit_percentage = ((best_bid - best_ask) / best_ask) * 100
             net_profit_percentage = ((effective_sell_price - effective_buy_price) / effective_buy_price) * 100
-            print("\n" + "="*50)
-            print(f"  !!! ARBITRAGE OPPORTUNITY DETECTED for {symbol} !!!")
-            print(f"  Buy on  -> {best_ask_exchange.upper():<10} at ASK price: {best_ask}")
-            print(f"  Sell on -> {best_bid_exchange.upper():<10} at BID price: {best_bid}")
-            print("-" * 50)
+            print("\n" + "="*60)
+            print(f"  !!! ARBITRAGE OPPORTUNITY DETECTED for {base_currency} !!!")
+            print(f"  Buy on  -> {best_ask_exchange.upper():<10} ({buy_pair}) at ASK price: {best_ask}")
+            print(f"  Sell on -> {best_bid_exchange.upper():<10} ({sell_pair}) at BID price: {best_bid}")
+            print("-" * 60)
             print(f"  Gross Profit (before fees): {gross_profit_percentage:.4f}%")
             print(f"  Net Profit (after fees):    {net_profit_percentage:.4f}%")
             print(f"  (Using fees: Buy {buy_fee*100:.3f}%, Sell {sell_fee*100:.3f}%)")
-            print("="*50 + "\n")
+            print("="*60 + "\n")
         else:
             gross_spread = ((best_bid - best_ask) / best_ask) * 100
-            logging.info(f"No profitable arbitrage opportunity found for {symbol} after fees.")
+            logging.info(f"No profitable arbitrage opportunity found for {base_currency} after fees.")
             logging.info(f"  Gross spread was {gross_spread:.4f}%. Best Bid: {best_bid} ({best_bid_exchange}), Best Ask: {best_ask} ({best_ask_exchange})")
