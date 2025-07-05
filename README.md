@@ -104,6 +104,8 @@ Supported exchanges:
 - Bybit
 - Bitstamp
 
+Trading fees for each exchange can be configured in `app/config.py`. The scanner uses these fees to calculate net profit.
+
 ## Features in Detail
 
 ### Market Data Feed

@@ -3,6 +3,7 @@ import time
 import logging
 import sys
 import os
+import asyncio
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -26,7 +27,7 @@ def run_scan_job():
     """Wrapper function for the arbitrage scan job to add logging and error handling."""
     logging.info("--- SCHEDULER: Running arbitrage scan job ---")
     try:
-        scan_for_arbitrage()
+        asyncio.run(scan_for_arbitrage())
     except Exception as e:
         logging.error(f"An error occurred in the arbitrage scan job: {e}", exc_info=True)
     logging.info("--- SCHEDULER: Arbitrage scan job finished ---")

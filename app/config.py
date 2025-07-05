@@ -13,3 +13,14 @@ EXCHANGES = ['binance', 'bybit', 'bitstamp']
 # List of trading pairs to monitor.
 # Ensure these pairs are available on all configured exchanges.
 TRADING_PAIRS = ['BTC/USDT', 'ETH/USDT']
+
+# --- Fee Configuration ---
+# Estimated taker fees for each exchange. These are used by the scanner
+# to calculate net profit. Taker fees are used because an arbitrage trade
+# needs to execute immediately.
+# These are just estimates and can vary.
+EXCHANGE_FEES = {
+    'binance': 0.001,   # 0.1%
+    'bybit': 0.001,     # 0.1%
+    'bitstamp': 0.004,  # 0.4%
+}

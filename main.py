@@ -2,6 +2,7 @@ import argparse
 import sys
 import os
 
+import asyncio
 # Add the app directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -27,7 +28,7 @@ def main():
         print("Market data fetched successfully.")
     elif args.action == 'scan':
         print("Scanning for arbitrage opportunities...")
-        scan_for_arbitrage()
+        asyncio.run(scan_for_arbitrage())
     elif args.action == 'backtest':
         run_backtest(plot=args.plot)
     elif args.action == 'view':
